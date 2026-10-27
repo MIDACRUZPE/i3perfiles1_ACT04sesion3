@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Dirección Estratégica - Instituto i3 (I3perfiles_ACT04)</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #0f172a;
+    }
+    h1, h2, h3, h4, .brand-font {
+      font-family: 'Outfit', sans-serif;
+    }
+    
+    /* Sticker 3D & Comic Box Aesthetics */
+    .sticker-card {
+      border: 4px solid #ffffff;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      border-radius: 1.25rem;
+    }
+    .comic-box {
+      border: 3px solid #000000;
+      box-shadow: 5px 5px 0px #000000;
+      border-radius: 1rem;
+    }
+    .comic-btn {
+      border: 3px solid #000000;
+      box-shadow: 4px 4px 0px #000000;
+      transition: all 0.15s ease-in-out;
+    }
+    .comic-btn:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px #000000;
+    }
+    .comic-btn:active:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000000;
+    }
+    
+    /* Custom Range Sliders */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 12px;
+      cursor: pointer;
+      background: #cbd5e1;
+      border-radius: 6px;
+      border: 2px solid #000000;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: #7e22ce;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -7px;
+      border: 2px solid #000000;
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    /* CORREGIDO: Toast/Notificación no bloqueante (reemplaza los alert) */
+    #toast-banner {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      max-width: min(92vw, 40rem);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Print: CORREGIDO — Ctrl+P directo legible y sin controles */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      section, div, header, footer, span, h1, h2, h3, h4, p, label, strong {
+        background: transparent !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        border-color: #999 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 min-h-screen text-slate-800 pb-16">
+
+  <!-- Toast de notificaciones (no bloqueante) -->
+  <div id="toast-banner" class="no-print hidden px-5 py-3 rounded-xl font-bold text-sm border-2 border-black"></div>
+
+  <!-- ================================================================================= -->
+  <!-- BARRA DE NAVEGACIÓN Y RUTA AUTÓNOMA (SISTEMA i3) — CORREGIDO: clase no-print -->
+  <!-- ================================================================================= -->
+  <header class="no-print bg-purple-900 text-white border-b-4 border-yellow-400 sticky top-0 z-50 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="bg-yellow-400 text-purple-950 font-black text-2xl px-3 py-1 rounded-xl border-2 border-black">
+          i3
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-black text-yellow-300 tracking-wide uppercase">
+            Simulador de Dirección Estratégica de Talento Humano
+          </h1>
+          <p class="text-xs text-purple-200 font-medium">
+            Instituto i3 — Guía Interactiva de Afianzamiento Conceptual | ID: <span class="text-yellow-300 font-bold">I3perfiles_ACT04</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Reloj en Vivo (Cuenta Regresiva 65 Min) -->
+      <div class="flex items-center space-x-2 bg-purple-950 px-4 py-2 rounded-xl border-2 border-purple-400">
+        <i class="fa-solid fa-clock text-yellow-400 text-lg animate-pulse"></i>
+        <div class="text-left">
+          <span class="block text-[10px] uppercase text-purple-300 font-bold leading-none">Tiempo Restante:</span>
+          <span id="cronometro" class="text-base font-black text-yellow-300 font-mono">65:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAJA DE RUTA AUTÓNOMA PARA EL ESTUDIANTE -->
+    <div class="bg-purple-950/90 border-t border-purple-800 px-4 py-2 text-xs">
+      <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+        <span class="font-extrabold text-yellow-300 uppercase tracking-wider flex items-center gap-1">
+          <i class="fa-solid fa-map-signs"></i> Ruta de Trabajo Autónomo:
+        </span>
+        <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold">
+          <span class="bg-purple-800 text-purple-100 px-2.5 py-1 rounded-lg border border-purple-600">
+            Paso 1: Leer Caso y Base Teórica Completa
+          </span>
+          <i class="fa-solid fa-chevron-right text-purple-400"></i>
+          <span class="bg-purple-800 text-purple-100 px-2.5 py-1 rounded-lg border border-purple-600">
+            Paso 2: Desarrollar los 3 Retos
+          </span>
+          <i class="fa-solid fa-chevron-right text-purple-400"></i>
+          <span class="bg-purple-800 text-purple-100 px-2.5 py-1 rounded-lg border border-purple-600">
+            Paso 3: Enviar Trabajo a Google Sheets
+          </span>
+          <i class="fa-solid fa-chevron-right text-purple-400"></i>
+          <span class="bg-yellow-400 text-purple-950 px-2.5 py-1 rounded-lg border border-black">
+            Paso 4: Exportar PDF / Reporte
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 pt-6 space-y-8">
+
+    <!-- BARRA DE HERRAMIENTAS Y RESPALDO JSON/PDF — CORREGIDO: no-print + PDF bloqueado hasta envío -->
+    <div class="no-print bg-slate-800 p-4 rounded-2xl border-2 border-slate-700 flex flex-wrap justify-between items-center gap-3 text-white">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-floppy-disk text-teal-400"></i>
+        <span class="text-xs font-bold text-slate-300">Autoguardado activado (LocalStorage)</span>
+        <span id="save-indicator" class="text-[10px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full border border-teal-500/40">Sincronizado</span>
+      </div>
+
+      <div class="flex flex-wrap gap-2 text-xs">
+        <button onclick="downloadBackup()" class="comic-btn bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-black px-3 py-2 rounded-xl flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> Descargar JSON
+        </button>
+        <label class="comic-btn bg-teal-500 hover:bg-teal-600 text-slate-950 font-black px-3 py-2 rounded-xl cursor-pointer flex items-center gap-1.5">
+          <i class="fa-solid fa-upload"></i> Cargar JSON
+          <input type="file" id="json-file-input" onchange="handleFileUpload(event)" accept=".json" class="hidden">
+        </label>
+        <!-- CORREGIDO: botón PDF con candado dinámico (se habilita tras 'ENVIAR TRABAJO') -->
+        <button onclick="openPreview()" id="btn-preview" disabled
+          title="⚠️ Debes enviar el trabajo a Google Sheets para habilitar el reporte PDF."
+          class="comic-btn bg-slate-400 text-slate-700 font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-not-allowed opacity-60">
+          <i class="fa-solid fa-lock"></i> Vista Previa PDF / Imprimir
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================================================= -->
+    <!-- PANTALLA 0: REGISTRO Y CASO DE NEGOCIO CORPORATIVO -->
+    <!-- ================================================================================= -->
+    <section class="bg-purple-800 text-white sticker-card p-6 md:p-8 space-y-6">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-purple-600 pb-4 gap-4">
+        <div>
+          <span class="bg-orange-500 text-white font-extrabold text-xs px-3 py-1.5 rounded-full uppercase tracking-wider border border-white">
+            🚨 Intervención Estratégica Urgente
+          </span>
+          <h2 class="text-2xl md:text-3xl font-extrabold mt-2 text-yellow-300">
+            Caso Corporativo: "Alianza Tech & Logística S.A.S."
+          </h2>
+        </div>
+        <div class="bg-purple-950 p-3.5 rounded-xl border-2 border-purple-500 text-right">
+          <p class="text-xs text-purple-300 font-bold uppercase">Presupuesto Congelado:</p>
+          <p class="text-2xl font-black text-lime-400">$1.200 Millones COP</p>
+        </div>
+      </div>
+
+      <!-- Narrative Box (Caso In Íntegro) -->
+      <div class="bg-purple-950/80 p-5 rounded-2xl border-2 border-purple-400 text-purple-100 leading-relaxed text-sm md:text-base space-y-3">
+        <p class="font-medium">
+          <strong class="text-yellow-300 font-bold text-base">Contexto de Crisis Organizacional:</strong><br>
+          La empresa <strong class="text-white">"Alianza Tech & Logística S.A.S."</strong> atraviesa una crisis de crecimiento acelerado. El <strong class="text-lime-300 underline">40% del personal operativo más antiguo</strong> maneja la maquinaria pesada por experiencia empírica acumulada pero carece de certificación formal; el área de Tecnología sufre una severa fuga de talento debido a sueldos por debajo del mercado; la Junta Directiva exige congelar el presupuesto general en <strong class="text-lime-300">$1.200 Millones COP</strong>; y el Ministerio del Trabajo inspeccionará próximamente los estándares mínimos de Seguridad y Salud en el Trabajo (SST).
+        </p>
+        <p class="font-medium text-purple-200">
+          La empresa necesita contratar a una firma consultora estratégica que reorganice la cualificación del personal y rebalancee los recursos financieros sin destruir la operación.
+        </p>
+      </div>
+
+      <!-- FORMULARIO DE DATOS DE LA FIRMA CONSULTORA (PASO 0 PASO A PASO) -->
+      <form id="form-taller" onsubmit="event.preventDefault();" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/10 p-5 rounded-2xl border-2 border-purple-400/40">
+        <div>
+          <label class="block text-xs font-bold text-yellow-300 uppercase mb-1">Materia / Programa:</label>
+          <input type="text" id="input-materia" value="Estructurar Perfiles de cargo 1" oninput="autoSave()" class="w-full bg-white text-slate-900 font-bold text-sm rounded-xl p-2.5 border-2 border-black focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-yellow-300 uppercase mb-1">ID de Actividad (Fijo / Congelado):</label>
+          <input type="text" id="input-actividad-id" name="actividad_id" value="I3perfiles_ACT04" readonly class="w-full bg-slate-300 text-slate-700 font-bold text-sm rounded-xl p-2.5 border-2 border-slate-500 cursor-not-allowed opacity-90" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-yellow-300 uppercase mb-1">Firma Consultora / Grupo:</label>
+          <input type="text" id="input-grupo" placeholder="Ej: Consultores TalentX - Mesa 3" oninput="autoSave()" class="w-full bg-white text-slate-900 font-bold text-sm rounded-xl p-2.5 border-2 border-black focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-yellow-300 uppercase mb-1">Integrantes de la Mesa:</label>
+          <input type="text" id="input-participantes" placeholder="Ej: C. Mendoza, L. Gómez, A. Silva" oninput="autoSave()" class="w-full bg-white text-slate-900 font-bold text-sm rounded-xl p-2.5 border-2 border-black focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        </div>
+      </form>
+    </section>
+
+    <!-- ================================================================================= -->
+    <!-- ESTACIÓN 1: MARCO NACIONAL DE CUALIFICACIONES (MNC) -->
+    <!-- ================================================================================= -->
+    <section class="bg-cyan-500 sticker-card p-6 md:p-8 space-y-6 text-slate-900">
+      <div class="flex items-center space-x-3 border-b-4 border-black pb-3">
+        <span class="bg-purple-900 text-yellow-300 font-black text-lg px-4 py-1.5 rounded-xl border-2 border-black">ESTACIÓN 1</span>
+        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight">El Mapeador del Marco Nacional de Cualificaciones (MNC)</h3>
+      </div>
+
+      <!-- BASE TEÓRICA EXTENSA IN ÍNTEGRO (SIN RESUMIR) -->
+      <div class="bg-white comic-box p-6 space-y-6">
+        <div class="flex items-center space-x-2 text-purple-900 font-black text-xl border-b-2 border-slate-200 pb-2">
+          <i class="fa-solid fa-lightbulb text-yellow-500 text-2xl"></i>
+          <h4>🧠 Pista Teórica 1: El Marco Nacional de Cualificaciones (MNC) como "El Semáforo del Saber"</h4>
+        </div>
+
+        <div class="space-y-3 text-sm md:text-base text-slate-800 leading-relaxed font-medium">
+          <p>
+            <strong class="text-purple-900 text-base">¿Qué es el MNC y para qué sirve en la vida real?</strong><br>
+            Imagina que el mercado laboral es una gran autopista por la que transitan millones de trabajadores. Durante décadas, cada colegio, universidad o empresa usaba su propio idioma para medir el trabajo. Un "técnico" en una empresa hacía el trabajo de un "operador" en otra, y las personas con 15 años de experiencia práctica eran rechazadas en empleos porque no tenían un cartón impreso.
+          </p>
+          <p>
+            Para resolver este caos, Colombia creó el <strong>Marco Nacional de Cualificaciones (MNC)</strong> (reglamentado mediante la <strong>Ley 1955 de 2019 art. 194</strong> y el <strong>Decreto 1649 de 2021</strong>). El MNC es como un <strong>"Semáforo o Escalera Universal de 8 Peldaños"</strong> que clasifica lo que una persona sabe y puede hacer, sin importar si lo aprendió en una universidad costosa, en un curso técnico o trabajando con sus propias manos en el taller.
+          </p>
+        </div>
+
+        <!-- Las 3 Reglas de Oro -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-2xl space-y-2">
+          <h5 class="font-extrabold text-yellow-900 text-sm md:text-base flex items-center gap-2">
+            <i class="fa-solid fa-crown text-yellow-600"></i> 📐 Las 3 Reglas de Oro del Marco (Propiedades Normativas)
+          </h5>
+          <p class="text-xs md:text-sm text-slate-700">De acuerdo con el <strong>Decreto 1649 de 2021 (Art. 2.7.2.1)</strong>, el MNC tiene tres características que todo líder de Talento Humano debe conocer:</p>
+          <ol class="list-decimal pl-5 text-xs md:text-sm text-slate-800 space-y-1 font-semibold">
+            <li><strong>Es un Marco Inclusivo:</strong> Cubre a TODAS las profesiones, oficios y niveles del país (desde el trabajador que barre la calle hasta el científico con doctorado en neurociencia).</li>
+            <li><strong>Es un Marco Flexible:</strong> Funciona como un "puente de comunicación" entre la educación y las empresas, respetando las diferencias de cada industria.</li>
+            <li><strong>Es un Marco No Abarcativo:</strong> Le dice a las empresas e institutos <em>qué resultados debe demostrar la persona</em>, pero NO les dicta cómo organizar sus clases o reglamentos internos.</li>
+          </ol>
+        </div>
+
+        <!-- Matriz de Descriptores -->
+        <div class="space-y-3">
+          <h5 class="font-extrabold text-purple-900 text-sm md:text-base flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-cyan-600"></i> 📊 ¿Cómo mide el MNC a las personas? (La Matriz de Descriptores)
+          </h5>
+          <p class="text-xs md:text-sm text-slate-700">Para ubicar a alguien en uno de los 8 niveles, el MNC evalúa 3 cosas (llamadas <strong>Descriptores de Nivel</strong>):</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs md:text-sm">
+            <div class="bg-yellow-100 border-2 border-yellow-400 p-3.5 rounded-xl space-y-1">
+              <strong class="text-yellow-900 block font-bold text-sm">1. Conocimientos (El Saber Teórico)</strong>
+              <p class="text-slate-700">Es la cantidad de hechos, teorías y principios que la persona tiene en la cabeza.</p>
+              <div class="bg-white p-2 rounded border border-yellow-300 italic text-[11px] text-yellow-900 mt-2">
+                📌 <strong>Ejemplo cotidiano:</strong> Saber de memoria los ingredientes y la teoría química de la fermentación del pan.
+              </div>
+            </div>
+
+            <div class="bg-teal-100 border-2 border-teal-400 p-3.5 rounded-xl space-y-1">
+              <strong class="text-teal-900 block font-bold text-sm">2. Destrezas (El Saber Hacer Práctico)</strong>
+              <p class="text-slate-700">Es la habilidad mental o manual para usar herramientas y resolver problemas prácticos.</p>
+              <div class="bg-white p-2 rounded border border-teal-300 italic text-[11px] text-teal-900 mt-2">
+                📌 <strong>Ejemplo cotidiano:</strong> Amasar la harina a toda velocidad y ajustar la temperatura del horno con precisión sin quemar el pan.
+              </div>
+            </div>
+
+            <div class="bg-purple-100 border-2 border-purple-400 p-3.5 rounded-xl space-y-1">
+              <strong class="text-purple-900 block font-bold text-sm">3. Actitudes (La Autonomía y Responsabilidad)</strong>
+              <p class="text-slate-700">Es la disposición de la persona para trabajar sola, tomar decisiones correctas y responder por los resultados sin que un jefe la esté vigilando todo el tiempo.</p>
+              <div class="bg-white p-2 rounded border border-purple-300 italic text-[11px] text-purple-900 mt-2">
+                📌 <strong>Ejemplo cotidiano:</strong> Hacerse cargo de toda la panadería, decidir qué producir hoy y responder si un pedido sale mal.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Las 3 Vías de Cualificación -->
+        <div class="space-y-3">
+          <h5 class="font-extrabold text-purple-900 text-sm md:text-base flex items-center gap-2">
+            <i class="fa-solid fa-route text-pink-600"></i> 🛣️ Las 3 Vías de Cualificación: ¿Por dónde se llega al éxito?
+          </h5>
+          <p class="text-xs md:text-sm text-slate-700">El MNC reconoce que se puede llegar a la cima del conocimiento por <strong>tres caminos diferentes (Vías de Cualificación)</strong>:</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs md:text-sm">
+            <div class="bg-sky-50 border-2 border-sky-300 p-3 rounded-xl">
+              <strong class="text-sky-900 block font-bold mb-1">1. Vía Educativa:</strong>
+              La ruta tradicional de colegios, institutos (ETDH) y universidades (Cubre Niveles 1 al 8 del MNC).
+            </div>
+            <div class="bg-indigo-50 border-2 border-indigo-300 p-3 rounded-xl">
+              <strong class="text-indigo-900 block font-bold mb-1">2. Vía del Subsistema de Formación para el Trabajo (SFT):</strong>
+              Cursos y capacitaciones prácticas enfocadas 100% en oficios que necesita el mercado laboral (Cubre Niveles 1 al 7).
+            </div>
+            <div class="bg-pink-100 border-2 border-pink-400 p-3 rounded-xl">
+              <strong class="text-pink-900 block font-bold mb-1">3. Vía del Reconocimiento de Aprendizajes Previos (RAP):</strong>
+              La herramienta estrella de Recursos Humanos. Permite evaluar y <strong>otorgar un título oficial a las personas que aprendieron empíricamente en la "escuela de la vida" y en el trabajo diario</strong>, sin obligarlas a sentarse 4 años en un aula de clase.
+            </div>
+          </div>
+        </div>
+
+        <!-- Gobernanza -->
+        <div class="bg-slate-100 border-l-4 border-purple-800 p-4 rounded-r-xl space-y-1 text-xs md:text-sm text-slate-700">
+          <strong class="text-purple-900 block text-sm">🏛️ ¿Quién manda en este sistema? (Gobernanza)</strong>
+          <p>
+            Según el <strong>Decreto 1649 de 2021</strong>, la rectoría del sistema la ejercen conjuntamente el <strong>Ministerio de Educación Nacional</strong> y el <strong>Ministerio del Trabajo</strong>. Existe un <strong>Comité Ejecutivo</strong> (que define la política pública) y un <strong>Comité Técnico</strong> (que construye los <em>Catálogos Sectoriales de Cualificaciones</em> que agrupan las normas de competencia que usan las empresas). Esta estructura se basa en recomendaciones internacionales de la <strong>OIT (Recomendación 195)</strong>, la <strong>UNESCO</strong> (sus 4 pilares: <em>aprender a conocer, hacer, convivir y ser</em>) y la <strong>OCDE</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- RETO INTERACTIVO ESTACIÓN 1 -->
+      <div class="bg-white comic-box p-6 space-y-6">
+        <h4 class="font-extrabold text-lg text-purple-900 border-b-2 border-slate-200 pb-2 flex items-center gap-2">
+          <i class="fa-solid fa-gamepad text-purple-700"></i> Reto Interactivo: Evalúa a los 3 Colaboradores de "Alianza Tech"
+        </h4>
+
+        <!-- Colaborador 1: Don Carlos -->
+        <div class="bg-slate-50 p-4 rounded-xl border-2 border-slate-300 space-y-3">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <span class="font-black text-base text-slate-800">1. Don Carlos (52 años) - Operador de Maquinaria</span>
+            <span class="bg-orange-400 text-black text-xs font-bold px-2.5 py-1 rounded-lg border border-black">12 años de experiencia empírica</span>
+          </div>
+          <p class="text-xs text-slate-600">Maneja montacargas y maquinaria pesada en la planta sin fallas, resuelve imprevistos mecánicos complejos solo, pero no tiene título secundario ni técnico impreso.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label class="block text-xs font-extrabold text-purple-900 mb-1">Nivel Estima MNC (1 al 8):</label>
+              <select id="carlos-nivel" onchange="autoSave()" class="w-full bg-white font-bold text-sm p-2 rounded-lg border-2 border-black">
+                <option value="">-- Seleccionar Nivel MNC --</option>
+                <option value="Nivel 1">Nivel 1 - Tareas simples / Supervisión directa</option>
+                <option value="Nivel 2">Nivel 2 - Tareas variadas / Supervisión directa</option>
+                <option value="Nivel 3">Nivel 3 - Ejecución autónoma / Destreza práctica alta</option>
+                <option value="Nivel 4">Nivel 4 - Coordinación técnica / Supervisión</option>
+                <option value="Nivel 5">Nivel 5 - Tecnólogo / Gestión de procesos</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-purple-900 mb-1">Vía de Cualificación Recomendada:</label>
+              <select id="carlos-via" onchange="autoSave()" class="w-full bg-white font-bold text-sm p-2 rounded-lg border-2 border-black">
+                <option value="">-- Seleccionar Vía --</option>
+                <option value="Educativa">Vía Educativa Tradicional (Bachillerato nocturno 3 años)</option>
+                <option value="RAP">Vía RAP - Reconocimiento de Aprendizajes Previos</option>
+                <option value="SFT">Vía Subsistema de Formación para el Trabajo (SFT)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colaborador 2: Andrea -->
+        <div class="bg-slate-50 p-4 rounded-xl border-2 border-slate-300 space-y-3">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <span class="font-black text-base text-slate-800">2. Andrea (26 años) - Coordinadora de Despachos</span>
+            <span class="bg-cyan-300 text-black text-xs font-bold px-2.5 py-1 rounded-lg border border-black">Técnica Graduada SFT</span>
+          </div>
+          <p class="text-xs text-slate-600">Técnica en Logística egresada de instituto formativo, coordina despachos e inventarios digitalizados.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-extrabold text-purple-900 mb-1">Nivel Estima MNC (1 al 8):</label>
+              <select id="andrea-nivel" onchange="autoSave()" class="w-full bg-white font-bold text-sm p-2 rounded-lg border-2 border-black">
+                <option value="">-- Seleccionar Nivel MNC --</option>
+                <option value="Nivel 2">Nivel 2 - Tareas operativas / Apoyo</option>
+                <option value="Nivel 3">Nivel 3 - Ejecución operativa autónoma</option>
+                <option value="Nivel 4">Nivel 4 - Técnica Intermedia en Logística Digital</option>
+                <option value="Nivel 5">Nivel 5 - Tecnóloga / Coordinación avanzada</option>
+                <option value="Nivel 6">Nivel 6 - Profesional Universitario</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-purple-900 mb-1">Vía de Cualificación Correspondiente:</label>
+              <select id="andrea-via" onchange="autoSave()" class="w-full bg-white font-bold text-sm p-2 rounded-lg border-2 border-black">
+                <option value="">-- Seleccionar Vía --</option>
+                <option value="Educativa">Vía Educativa (Universitaria / Posgrados)</option>
+                <option value="SFT">Vía Subsistema de Formación para el Trabajo (SFT)</option>
+                <option value="RAP">Vía Reconocimiento de Aprendizajes Previos (RAP)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colaborador 3: Ing. Julián -->
+        <div class="bg-slate-50 p-4 rounded-xl border-2 border-slate-300 space-y-3">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <span class="font-black text-base text-slate-800">3. Ing. Julián (31 años) - Desarrollador de Software</span>
+            <span class="bg-purple-300 text-black text-xs font-bold px-2.5 py-1 rounded-lg border border-black">Profesional Universitario</span>
+          </div>
+          <p class="text-xs text-slate-600">Licenciado universitario en Software, diseña los algoritmos de ruta de la empresa.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-extrabold text-purple-900 mb-1">Nivel Estima MNC (1 al 8):</label>
+              <select id="julian-nivel" onchange="autoSave()" class="w-full bg-white font-bold text-sm p-2 rounded-lg border-2 border-black">
+                <option value="">-- Seleccionar Nivel MNC --</option>
+                <option value="Nivel 4">Nivel 4 - Técnico Intermedio</option>
+                <option value="Nivel 5">Nivel 5 - Tecnólogo en Desarrollo</option>
+                <option value="Nivel 6">Nivel 6 - Profesional Universitario</option>
+                <option value="Nivel 7">Nivel 7 - Maestría / Especialización</option>
+                <option value="Nivel 8">Nivel 8 - Doctorado</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-purple-900 mb-1">Vía de Cualificación Correspondiente:</label>
+              <select id="julian-via" onchange="autoSave()" class="w-full bg-white font-bold text-sm p-2 rounded-lg border-2 border-black">
+                <option value="">-- Seleccionar Vía --</option>
+                <option value="Educativa">Vía Educativa (Universitaria)</option>
+                <option value="SFT">Vía Subsistema de Formación para el Trabajo (SFT)</option>
+                <option value="RAP">Vía Reconocimiento de Aprendizajes Previos (RAP)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- JUSTIFICACIÓN ANALÍTICA (ITEM 1 DEL WEBHOOK) -->
+        <div class="space-y-2 pt-2 border-t-2 border-slate-200">
+          <label class="block text-sm font-black text-purple-900">
+            📝 ÍTEM 1: Construcción de la Frase Analítica Guiada (Obligatorio)
+          </label>
+          <p class="text-xs text-slate-600">Escriba su justificación analítica en el campo a continuación:</p>
+          <textarea id="item-1" rows="4" onkeyup="autoSave()" placeholder="Escriba aquí su frase analítica. Justifique la elección de la Vía RAP para Don Carlos frente al nivel del MNC (Nivel 3), explicando cómo esta decisión evita la interrupción de la planta, reduce costos de rotación y valida su autonomía operativa..." class="w-full p-3 font-medium text-sm rounded-xl border-2 border-black bg-yellow-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================================= -->
+    <!-- ESTACIÓN 2: ECUALIZADOR FINANCIERO Y PRESUPUESTO DE TALENTO -->
+    <!-- ================================================================================= -->
+    <section class="bg-teal-400 sticker-card p-6 md:p-8 space-y-6 text-slate-900">
+      <div class="flex items-center space-x-3 border-b-4 border-black pb-3">
+        <span class="bg-purple-900 text-yellow-300 font-black text-lg px-4 py-1.5 rounded-xl border-2 border-black">ESTACIÓN 2</span>
+        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight">El Ecualizador Financiero y Presupuesto de RR.HH.</h3>
+      </div>
+
+      <!-- BASE TEÓRICA EXTENSA IN ÍNTEGRO -->
+      <div class="bg-white comic-box p-6 space-y-6">
+        <div class="flex items-center space-x-2 text-purple-900 font-black text-xl border-b-2 border-slate-200 pb-2">
+          <i class="fa-solid fa-calculator text-teal-600 text-2xl"></i>
+          <h4>🧠 Pista Teórica 2: El Presupuesto de Talento como "El Plan de Vuelo Financiero"</h4>
+        </div>
+
+        <div class="space-y-3 text-sm md:text-base text-slate-800 leading-relaxed font-medium">
+          <p>
+            <strong class="text-purple-900 text-base">¿Por qué Recursos Humanos necesita manejar números?</strong><br>
+            Un departamento de Recursos Humanos sin presupuesto es como un avión volando a ciegas sin indicador de combustible. El <strong>presupuesto de RR.HH.</strong> es el plan financiero anual que traduce las metas estratégicas de la empresa en dinero real. Su objetivo es asegurar que la empresa tenga las personas correctas, en el momento correcto, al costo financiero correcto.
+          </p>
+        </div>
+
+        <!-- Las 6 Bolsas de Dinero -->
+        <div class="space-y-3">
+          <h5 class="font-extrabold text-purple-900 text-sm md:text-base flex items-center gap-2">
+            <i class="fa-solid fa-wallet text-teal-700"></i> 🛍️ Las 6 Bolsas de Dinero (Componentes del Costo Laboral)
+          </h5>
+          <p class="text-xs md:text-sm text-slate-700">Según las mejores prácticas de consultoría (<strong>Bizneo HR</strong> y <strong>Asturias Corporación Universitaria</strong>), todo el dinero de Talento Humano se divide en <strong>6 bolsas o partidas de gasto</strong>:</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs md:text-sm">
+            <div class="bg-slate-50 border-2 border-slate-300 p-3 rounded-xl">
+              <strong class="text-purple-900 block font-bold">1. Salarios y Compensaciones (La bolsa más grande):</strong>
+              Sueldos base, bonos por desempeño, comisiones y prestaciones de ley.
+            </div>
+            <div class="bg-slate-50 border-2 border-slate-300 p-3 rounded-xl">
+              <strong class="text-purple-900 block font-bold">2. Reclutamiento y Selección:</strong>
+              Lo que cuesta buscar personal afuera (anuncios en portales, pruebas psicotécnicas, honorarios de agencias <em>headhunters</em>).
+            </div>
+            <div class="bg-slate-50 border-2 border-slate-300 p-3 rounded-xl">
+              <strong class="text-purple-900 block font-bold">3. Formación y Desarrollo:</strong>
+              Cursos, talleres, licencias de plataformas <em>e-learning</em> y certificaciones.
+            </div>
+            <div class="bg-orange-50 border-2 border-orange-400 p-3 rounded-xl">
+              <strong class="text-orange-900 block font-bold">4. Prevención de Riesgos Laborales (SST) y Bienestar:</strong>
+              Compra de cascos, botas, exámenes médicos ocupacionales, programas de salud mental y seguros. <em>¡Ojo! En la mayoría de países esto es un mínimo legal obligatorio.</em>
+            </div>
+            <div class="bg-slate-50 border-2 border-slate-300 p-3 rounded-xl">
+              <strong class="text-purple-900 block font-bold">5. Tecnología e Innovación:</strong>
+              Software de gestión (HCM, ATS), control de horario y auxilios o computadores para <em>home office</em> / teletrabajo.
+            </div>
+            <!-- CORREGIDO: faltaba la 6ª bolsa y los contenedores quedaban sin cerrar (el reto quedaba atrapado dentro del grid) -->
+            <div class="bg-slate-50 border-2 border-slate-300 p-3 rounded-xl">
+              <strong class="text-purple-900 block font-bold">6. Tiempo y Costo de Oportunidad:</strong>
+              Horas-hombre invertidas en procesos de selección, curvas de aprendizaje del personal nuevo y el costo de no tener el puesto operativo mientras se cubre la vacante.
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- FIN BASE TEÓRICA ESTACIÓN 2 -->
+
+      <!-- RETO INTERACTIVO: SLIDERS PRESUPUESTALES Y RESTRICCIÓN NORMATIVA -->
+      <div class="bg-white comic-box p-6 space-y-6">
+        <div class="flex justify-between items-center border-b-2 border-slate-200 pb-3 flex-wrap gap-2">
+          <div>
+            <h4 class="font-extrabold text-lg text-purple-900">🎮 Reto de Rebalanceo: Ajusta los Sliders Presupuestales</h4>
+            <p class="text-xs text-slate-600">Presupuesto límite congelado: $1.200M COP | Retener Ingenieros: +$40M COP en Salarios</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-bold uppercase block text-slate-500">Suma Total Ejecutada:</span>
+            <span id="presupuesto-total-display" class="text-2xl font-black text-purple-900">$1.200M COP</span>
+          </div>
+        </div>
+
+        <!-- GUÍA PASO A PASO DEL RETO DE REBALANCEO -->
+        <div class="bg-yellow-100 border-2 border-black p-4 rounded-xl space-y-3">
+          <h5 class="font-black text-purple-950 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-yellow-700 text-base"></i> 🎯 INSTRUCCIONES CLARAS PARA EL DESAFÍO DE REBALANCEO:
+          </h5>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div class="bg-white p-3 rounded-lg border border-yellow-400 space-y-1">
+              <span class="font-black text-purple-900 block border-b pb-1">PASO 1: Identifica la Necesidad</span>
+              <p class="text-slate-700">Los 3 ingenieros de Tecnología se van a ir a la competencia. Para retenerlos (Competitividad Externa), debes <strong>AUMENTAR $40M COP</strong> en la barra de <strong>Salarios</strong> (pasando de $700M a $740M).</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-yellow-400 space-y-1">
+              <span class="font-black text-purple-900 block border-b pb-1">PASO 2: Encuentra de dónde Recortar</span>
+              <p class="text-slate-700">Como el presupuesto total está congelado en $1.200M, debes compensar los $40M recortando otra bolsa. <strong>REDUCE $40M COP</strong> en la barra de <strong>Reclutamiento</strong> (usando referidos e incentivos internos).</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-yellow-400 space-y-1">
+              <span class="font-black text-purple-900 block border-b pb-1">PASO 3: Respeta la Ley (Mínimo SST)</span>
+              <p class="text-slate-700"><strong>⚠️ REGLA DE ORO:</strong> Jamás bajes la barra de <strong>SST y Bienestar</strong> por debajo de <strong>$150M COP</strong>. Si la desfinancias, el sistema detectará la infracción legal y bloqueará el envío.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerta SST Dinámica -->
+        <div id="alerta-sst" class="hidden bg-red-500 text-white p-4 rounded-xl font-bold text-xs md:text-sm animate-bounce flex items-center gap-3 border-2 border-black">
+          <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+          <span>🚨 ERROR NORMATIVO: El Decreto 1072 y la Res. 0312 exigen mantener los mínimos de SST ($150M) para exámenes ocupacionales y EPP. No puedes desfinanciar la salud de los trabajadores.</span>
+        </div>
+
+        <!-- CORREGIDO: alerta por sobre-ejecución presupuestal (antes solo pintaba el total en rojo pero permitía enviar) -->
+        <div id="alerta-presupuesto" class="hidden bg-orange-500 text-white p-4 rounded-xl font-bold text-xs md:text-sm flex items-center gap-3 border-2 border-black">
+          <i class="fa-solid fa-ban text-2xl"></i>
+          <span>🚨 PRESUPUESTO EXCEDIDO: El techo congelado por la Junta Directiva es de $1.200M COP. Rebalancea las partidas para poder enviar el trabajo.</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+          <!-- Slider 1: Salarios -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-300">
+            <div class="flex justify-between font-bold mb-1">
+              <span>1. Salarios y Compensaciones:</span>
+              <span id="val-salarios" class="text-purple-800">$740M</span>
+            </div>
+            <input type="range" id="slide-salarios" min="600" max="800" step="10" value="740" oninput="actualizarPresupuesto()" class="w-full accent-purple-800 cursor-pointer">
+            <span class="text-[11px] text-slate-500">Aumentado +$40M para frenar fuga de talentos en Tecnología.</span>
+          </div>
+
+          <!-- Slider 2: Reclutamiento -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-300">
+            <div class="flex justify-between font-bold mb-1">
+              <span>2. Reclutamiento y Selección:</span>
+              <span id="val-reclutamiento" class="text-purple-800">$40M</span>
+            </div>
+            <input type="range" id="slide-reclutamiento" min="20" max="100" step="10" value="40" oninput="actualizarPresupuesto()" class="w-full accent-purple-800 cursor-pointer">
+            <span class="text-[11px] text-slate-500">Recortado -$40M utilizando reclutamiento interno y referidos.</span>
+          </div>
+
+          <!-- Slider 3: Formación -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-300">
+            <div class="flex justify-between font-bold mb-1">
+              <span>3. Formación y Desarrollo:</span>
+              <span id="val-formacion" class="text-purple-800">$120M</span>
+            </div>
+            <input type="range" id="slide-formacion" min="80" max="200" step="10" value="120" oninput="actualizarPresupuesto()" class="w-full accent-purple-800 cursor-pointer">
+          </div>
+
+          <!-- Slider 4: SST y Bienestar -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-300">
+            <div class="flex justify-between font-bold mb-1">
+              <span>4. Prevención SST y Bienestar:</span>
+              <span id="val-sst" class="text-purple-800">$160M</span>
+            </div>
+            <input type="range" id="slide-sst" min="100" max="250" step="10" value="160" oninput="actualizarPresupuesto()" class="w-full accent-purple-800 cursor-pointer">
+            <span class="text-[11px] text-red-600 font-bold">Mínimo legal obligatorio: $150M COP</span>
+          </div>
+
+          <!-- Slider 5: Tecnología -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-300">
+            <div class="flex justify-between font-bold mb-1">
+              <span>5. Tecnología e Innovación HCM:</span>
+              <span id="val-tecnologia" class="text-purple-800">$90M</span>
+            </div>
+            <input type="range" id="slide-tecnologia" min="50" max="150" step="10" value="90" oninput="actualizarPresupuesto()" class="w-full accent-purple-800 cursor-pointer">
+          </div>
+
+          <!-- Slider 6: Tiempo Oportunidad -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-300">
+            <div class="flex justify-between font-bold mb-1">
+              <span>6. Tiempo y Costo Oportunidad:</span>
+              <span id="val-tiempo" class="text-purple-800">$50M</span>
+            </div>
+            <input type="range" id="slide-tiempo" min="30" max="100" step="10" value="50" oninput="actualizarPresupuesto()" class="w-full accent-purple-800 cursor-pointer">
+          </div>
+        </div>
+
+        <!-- JUSTIFICACIÓN PRESUPUESTAL (ITEM 2 DEL WEBHOOK) -->
+        <div class="space-y-2 pt-2 border-t-2 border-slate-200">
+          <label class="block text-sm font-black text-purple-900">
+            📝 ÍTEM 2: Defensa Técnica ante el CFO (3 líneas guiadas - Obligatorio)
+          </label>
+          <textarea id="item-2" rows="4" onkeyup="autoSave()" placeholder="Escriba aquí la defensa técnica para la Junta Directiva y el CFO. Explique de qué partida recortó los $40M COP (Reclutamiento Externo) para reasignarlos a Salarios de Tecnología (Competitividad Externa), y cómo garantiza el cumplimiento normativo en SST ($160M) aplicando un Presupuesto Base Cero (PBC)..." class="w-full p-3 font-medium text-sm rounded-xl border-2 border-black bg-yellow-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================================= -->
+    <!-- ESTACIÓN 3: WORKFORCE PLANNING & 9-BOX GRID -->
+    <!-- ================================================================================= -->
+    <section class="bg-fuchsia-500 sticker-card p-6 md:p-8 space-y-6 text-white">
+      <div class="flex items-center space-x-3 border-b-4 border-white pb-3">
+        <span class="bg-purple-950 text-yellow-300 font-black text-lg px-4 py-1.5 rounded-xl border-2 border-white">ESTACIÓN 3</span>
+        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight">El Tablero de Workforce Planning & 9-Box Grid</h3>
+      </div>
+
+      <!-- BASE TEÓRICA EXTENSA IN ÍNTEGRO -->
+      <div class="bg-white text-slate-900 comic-box p-6 space-y-6">
+        <div class="flex items-center space-x-2 text-purple-900 font-black text-xl border-b-2 border-slate-200 pb-2">
+          <i class="fa-solid fa-cubes text-fuchsia-600 text-2xl"></i>
+          <h4>🧠 Pista Teórica 3: Workforce Planning como "El Mapa del Tesoro del Talento"</h4>
+        </div>
+
+        <div class="space-y-3 text-sm md:text-base text-slate-800 leading-relaxed font-medium">
+          <p>
+            <strong class="text-purple-900 text-base">¿Qué es la Planificación Estratégica de Personal?</strong><br>
+            La <strong>Planificación de Personal (<em>Workforce Planning</em>)</strong> es el proceso continuo para asegurar que la empresa tenga el número adecuado de personas, con las competencias correctas, en los puestos correctos y en el momento oportuno.
+          </p>
+        </div>
+
+        <!-- Las 4 Fases -->
+        <div class="bg-fuchsia-50 border-2 border-fuchsia-300 p-4 rounded-xl space-y-2 text-xs md:text-sm">
+          <strong class="text-purple-900 block font-bold text-sm">🗺️ Las 4 Fases del Proceso (Estándar Manatal / Deel)</strong>
+          <ol class="list-decimal pl-5 space-y-1 font-semibold text-slate-800">
+            <li><strong>Alineación Estratégica:</strong> Traducir las metas del negocio en necesidades de personal.</li>
+            <li><strong>Previsión de la Demanda:</strong> Predecir cuánta gente se va a necesitar en el futuro.</li>
+            <li><strong>Análisis de la Oferta (Gap Analysis):</strong> Mirar qué talento tenemos hoy dentro de la empresa y descubrir qué brechas o vacíos de conocimiento existen.</li>
+            <li><strong>Plan de Acción:</strong> Decidir si vamos a <strong>Construir</strong> (<em>Build</em> - capacitar internamente), <strong>Comprar</strong> (<em>Buy</em> - contratar afuera), <strong>Retener</strong> (<em>Retain</em> - cuidar al talento clave) o <strong>Ajustar</strong> (<em>Adjust</em> - mover de rol).</li>
+          </ol>
+        </div>
+
+        <!-- Matriz 9-Box Grid Explicada Detalladamente -->
+        <div class="space-y-4">
+          <h5 class="font-extrabold text-purple-900 text-sm md:text-base flex items-center gap-2">
+            <i class="fa-solid fa-table-cells text-fuchsia-600 text-lg"></i> 📊 La Matriz 9-Box Grid: ¿Cómo Funciona y Cómo se Lee?
+          </h5>
+          
+          <p class="text-xs md:text-sm text-slate-700 leading-relaxed">
+            La <strong>Matriz de 9 Casillas (9-Box Grid)</strong> es una herramienta gráfica de evaluación que cruza <strong>dos ejes fundamentales</strong> para diagnosticar a los colaboradores y decidir la estrategia de talento adecuada:
+          </p>
+
+          <!-- Diagrama de Ejes Explicativos -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs md:text-sm">
+            <div class="bg-purple-50 border-2 border-purple-300 p-3.5 rounded-xl space-y-1">
+              <span class="font-black text-purple-900 block text-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-arrows-left-right text-purple-700"></i> EJE HORIZONTAL (Eje X) — Desempeño Actual
+              </span>
+              <p class="text-slate-700">
+                Mide si el empleado <strong>cumplió o no con sus metas de trabajo hoy</strong> (Resultados del presente). Se clasifica en: <em>Bajo, Medio o Alto Desempeño</em>.
+              </p>
+            </div>
+            <div class="bg-fuchsia-50 border-2 border-fuchsia-300 p-3.5 rounded-xl space-y-1">
+              <span class="font-black text-fuchsia-900 block text-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-arrows-up-down text-fuchsia-700"></i> EJE VERTICAL (Eje Y) — Potencial Futuro
+              </span>
+              <p class="text-slate-700">
+                Mide la <strong>capacidad de la persona para aprender, adaptarse y asumir cargos más complejos mañana</strong> (Capacidad de crecimiento futuro). Se clasifica en: <em>Bajo, Medio o Alto Potencial</em>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Esquema Visual de la Matriz 9-Box -->
+          <div class="bg-slate-900 text-slate-100 p-4 rounded-2xl border-2 border-black space-y-3 font-sans">
+            <div class="text-center font-bold text-yellow-300 text-xs uppercase tracking-wider">
+              🗺️ MAPA DE LAS 9 CASILLAS (CRUCE DE EJES)
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center text-[11px] md:text-xs font-bold text-white uppercase">
+              <!-- Fila ALTO POTENCIAL -->
+              <div class="bg-purple-700 p-3 rounded-xl border border-purple-400 flex flex-col justify-between min-h-[80px]">
+                <span class="text-yellow-300 font-black">BOX 1: ENIGMA</span>
+                <span class="text-[9px] lowercase text-purple-200">Bajo Desempeño + Alto Potencial</span>
+              </div>
+              <div class="bg-purple-800 p-3 rounded-xl border border-purple-400 flex flex-col justify-between min-h-[80px]">
+                <span class="text-purple-100 font-bold">BOX 2: ALTO POTENCIAL</span>
+                <span class="text-[9px] lowercase text-purple-300">Medio Desempeño + Alto Potencial</span>
+              </div>
+              <div class="bg-lime-500 text-black p-3 rounded-xl border-2 border-white flex flex-col justify-between min-h-[80px]">
+                <span class="font-black">BOX 3: SUPERESTRELLA</span>
+                <span class="text-[9px] lowercase text-black/80 font-semibold">Alto Desempeño + Alto Potencial</span>
+              </div>
+
+              <!-- Fila MEDIO POTENCIAL -->
+              <div class="bg-purple-500 p-3 rounded-xl border border-purple-300 flex flex-col justify-between min-h-[80px]">
+                <span>BOX 4: DILEMA</span>
+                <span class="text-[9px] lowercase text-purple-100">Bajo Desempeño + Medio Potencial</span>
+              </div>
+              <div class="bg-purple-600 p-3 rounded-xl border border-purple-300 flex flex-col justify-between min-h-[80px]">
+                <span>BOX 5: CLAVE</span>
+                <span class="text-[9px] lowercase text-purple-200">Medio Desempeño + Medio Potencial</span>
+              </div>
+              <div class="bg-teal-600 p-3 rounded-xl border border-teal-300 flex flex-col justify-between min-h-[80px]">
+                <span>BOX 6: ALTO RENDIMIENTO</span>
+                <span class="text-[9px] lowercase text-teal-100">Alto Desempeño + Medio Potencial</span>
+              </div>
+
+              <!-- Fila BAJO POTENCIAL -->
+              <div class="bg-red-500 p-3 rounded-xl border border-red-300 flex flex-col justify-between min-h-[80px]">
+                <span>BOX 7: RIESGO</span>
+                <span class="text-[9px] lowercase text-red-100">Bajo Desempeño + Bajo Potencial</span>
+              </div>
+              <div class="bg-slate-500 p-3 rounded-xl border border-slate-300 flex flex-col justify-between min-h-[80px]">
+                <span>BOX 8: EFICAZ</span>
+                <span class="text-[9px] lowercase text-slate-200">Medio Desempeño + Bajo Potencial</span>
+              </div>
+              <div class="bg-blue-600 p-3 rounded-xl border border-blue-300 flex flex-col justify-between min-h-[80px]">
+                <span>BOX 9: FIEL RENDIDOR</span>
+                <span class="text-[9px] lowercase text-blue-100">Alto Desempeño + Bajo Potencial</span>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center text-[10px] text-slate-300 font-mono px-1">
+              <span>◄ DESEMPEÑO BAJO</span>
+              <span>DESEMPEÑO MEDIO</span>
+              <span>DESEMPEÑO ALTO ►</span>
+            </div>
+          </div>
+
+          <!-- Glosario de Casillas Clave -->
+          <div class="space-y-1.5 text-xs md:text-sm bg-yellow-50 p-4 rounded-xl border-2 border-yellow-300 text-slate-800">
+            <strong class="text-purple-900 block font-bold text-sm">💡 ¿Qué acciones exige cada perfil en la práctica?</strong>
+            <p>• 🌟 <strong>Box 3 (Superestrella - Alto Des. / Alto Pot.):</strong> Talento crítico. ➔ <strong>Acción:</strong> <em>Retener (Retain)</em> con promociones y planes de sucesión acelerados.</p>
+            <p>• 💡 <strong>Box 1 (Enigma - Bajo Des. / Alto Pot.):</strong> Colaborador con un cerebro extraordinario y rápido aprendizaje, pero que falla por falta de herramientas técnicas o entrenamiento inicial. ➔ <strong>Acción:</strong> <em>Construir (Build / Reskilling)</em> capacitándolo para desbloquear su potencial.</p>
+            <p>• 🛡️ <strong>Box 9 (Fiel Rendidor - Alto Des. / Bajo Pot.):</strong> Experto en su tarea actual que no desea asumir jefaturas ni cambios de rol. ➔ <strong>Acción:</strong> <em>Mantener y Reconocer</em> en su puesto sin forzarlo a ascensos innecesarios.</p>
+            <p>• ⚠️ <strong>Box 7 (Riesgo - Bajo Des. / Bajo Pot.):</strong> No cumple metas ni muestra capacidad de aprendizaje. ➔ <strong>Acción:</strong> <em>Ajustar Rol o Reestructurar</em>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RETO INTERACTIVO: 9-BOX Y WORKFORCE PLANNING -->
+      <div class="bg-white text-slate-900 comic-box p-6 space-y-6">
+        <h4 class="font-extrabold text-lg text-purple-900 border-b-2 border-slate-200 pb-2 flex items-center gap-2">
+          <i class="fa-solid fa-chart-simple text-purple-700 text-xl"></i> Reto Interactivo: Diagnóstico de Talento y Estrategia Build vs Buy
+        </h4>
+
+        <!-- GUÍA PASO A PASO INTUITIVA DEL RETO DE WORKFORCE PLANNING -->
+        <div class="bg-fuchsia-100 border-2 border-black p-4 rounded-xl space-y-3">
+          <h5 class="font-black text-purple-950 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-fuchsia-800 text-base"></i> 🎯 GUÍA PASO A PASO PARA RESOLVER EL RETO 3:
+          </h5>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div class="bg-white p-3 rounded-lg border border-fuchsia-300 space-y-1">
+              <span class="font-black text-purple-900 block border-b pb-1">PASO 1: Analiza a Mateo</span>
+              <p class="text-slate-700"><strong>Perfil:</strong> Mateo no cumple las metas actuales porque desconoce el software nuevo (<em>Bajo Desempeño</em>), pero sus pruebas de aprendizaje son sobresalientes (<em>Alto Potencial</em>). Pertenece a <strong>Box 1 (Enigma)</strong>.</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-fuchsia-300 space-y-1">
+              <span class="font-black text-purple-900 block border-b pb-1">PASO 2: Evalúa las Opciones Financieras</span>
+              <p class="text-slate-700">
+                • <strong>Opción A (Buy / Despido):</strong> $15M indemnización + $20M selección = <strong>$35M COP</strong>.<br>
+                • <strong>Opción B (Build / Reskilling):</strong> Capacitación en e-learning = <strong>$6M COP</strong> (Ahorro del 80%).
+              </p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-fuchsia-300 space-y-1">
+              <span class="font-black text-purple-900 block border-b pb-1">PASO 3: Asigna la Estrategia</span>
+              <p class="text-slate-700">Selecciona la mejor estrategia para Mateo y para Sofía en los menús desplegables y redacta tu dictamen final en la caja de texto inferior.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matriz 9-Box Dinámica Interactiva -->
+        <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold text-white uppercase">
+          <!-- Fila Alto Potencial -->
+          <div class="bg-purple-600 p-4 rounded-xl border-2 border-black flex flex-col justify-center items-center min-h-[95px]">
+            <span class="text-yellow-300 font-black">BOX 1: ENIGMA</span>
+            <span class="text-[10px] lowercase text-purple-100">Bajo Des / Alto Pot</span>
+            <span class="mt-1 bg-yellow-400 text-black px-2 py-0.5 rounded text-[10px] font-black shadow border border-black">🎯 MATEO</span>
+          </div>
+          <div class="bg-purple-700 p-4 rounded-xl border-2 border-black flex flex-col justify-center items-center min-h-[95px]">
+            <span>BOX 2: ALTO POTENCIAL</span>
+            <span class="text-[10px] lowercase text-purple-200">Med Des / Alto Pot</span>
+          </div>
+          <div class="bg-lime-500 text-black p-4 rounded-xl border-2 border-black flex flex-col justify-center items-center min-h-[95px]">
+            <span class="font-black">BOX 3: SUPERESTRELLA</span>
+            <span class="text-[10px] lowercase text-black/80 font-bold">Alto Des / Alto Pot</span>
+            <span class="mt-1 bg-purple-900 text-yellow-300 px-2 py-0.5 rounded text-[10px] font-black shadow border border-black">🌟 SOFÍA</span>
+          </div>
+
+          <!-- Fila Medio Potencial -->
+          <div class="bg-purple-400 p-3 rounded-xl border border-black text-slate-900 font-bold">Box 4: Dilema</div>
+          <div class="bg-purple-500 p-3 rounded-xl border border-black">Box 5: Clave</div>
+          <div class="bg-teal-500 p-3 rounded-xl border border-black">Box 6: Alto Rend.</div>
+
+          <!-- Fila Bajo Potencial -->
+          <div class="bg-red-400 p-3 rounded-xl border border-black text-slate-900 font-bold">Box 7: Riesgo</div>
+          <div class="bg-slate-400 p-3 rounded-xl border border-black">Box 8: Eficaz</div>
+          <div class="bg-blue-500 p-3 rounded-xl border border-black">Box 9: Fiel Rendidor</div>
+        </div>
+
+        <!-- Seleccionables de Decisión Estratégica -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div class="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-400 space-y-2">
+            <span class="font-black text-sm text-purple-900 block">1. Decisión Estratégica para Mateo (Box 1 - Enigma):</span>
+            <p class="text-xs text-slate-600">Analiza el costo financiero de despedir frente a reentrenar y selecciona la mejor opción:</p>
+            <select id="item-3-mateo" onchange="autoSave()" class="w-full bg-white font-bold text-xs md:text-sm p-2.5 rounded-lg border-2 border-black focus:ring-2 focus:ring-purple-700">
+              <option value="">-- Seleccionar Estrategia para Mateo --</option>
+              <option value="Build (Reskilling / Capacitación)">Estrategia Build (Reskilling / Capacitación $6M COP)</option>
+              <option value="Buy (Despido y Contratación)">Estrategia Buy (Despido e indemnización + Búsqueda $35M COP)</option>
+            </select>
+          </div>
+
+          <div class="bg-lime-50 p-4 rounded-xl border-2 border-lime-400 space-y-2">
+            <span class="font-black text-sm text-purple-900 block">2. Decisión Estratégica para Sofía (Box 3 - Superestrella):</span>
+            <p class="text-xs text-slate-600">Supera todas sus metas semanales y demuestra liderazgo sobresaliente en la operación:</p>
+            <select id="item-4-sofia" onchange="autoSave()" class="w-full bg-white font-bold text-xs md:text-sm p-2.5 rounded-lg border-2 border-black focus:ring-2 focus:ring-purple-700">
+              <option value="">-- Seleccionar Estrategia para Sofía --</option>
+              <option value="Retain / Plan de Sucesión Acelerado">Estrategia Retain (Plan de Sucesión y Retención Acelerada)</option>
+              <option value="Adjust / Reubicación">Estrategia Adjust (Mover a otra área menor)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DICTAMEN DE WORKFORCE PLANNING (ITEM 3 DEL WEBHOOK) -->
+        <div class="space-y-2 pt-2 border-t-2 border-slate-200">
+          <label class="block text-sm font-black text-purple-900">
+            📝 ÍTEM 3 & 4: Dictamen de Workforce Planning (Build vs Buy) (Obligatorio)
+          </label>
+          <textarea id="item-3" rows="4" onkeyup="autoSave()" placeholder="Escriba aquí su dictamen analítico de Workforce Planning. Justifique la ubicación de Mateo en la casilla Box 1 (Enigma) de la matriz 9-Box y argumente por qué la estrategia Build (Reskilling/Capacitación) es superior a la opción Buy, detallando el ahorro de costos y el impacto en el clima laboral..." class="w-full p-3 font-medium text-sm rounded-xl border-2 border-black bg-yellow-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================================= -->
+    <!-- EXIT TICKET INDIVIDUAL (ITEM 5 DEL WEBHOOK) -->
+    <!-- ================================================================================= -->
+    <section class="bg-orange-500 sticker-card p-6 md:p-8 space-y-6 text-white">
+      <div class="flex items-center space-x-3 border-b-4 border-white pb-3">
+        <span class="bg-purple-950 text-yellow-300 font-black text-lg px-4 py-1.5 rounded-xl border-2 border-white">EXIT TICKET</span>
+        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight">Cuestionario de Afianzamiento Individual</h3>
+      </div>
+
+      <div class="bg-white text-slate-900 comic-box p-6 space-y-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-black text-purple-900">
+            📝 ÍTEM 5: Síntesis de Cierre - Responda brevemente: ¿Cuál es la diferencia entre Equidad Interna y Competitividad Externa en los salarios?
+          </label>
+          <textarea id="item-4" rows="4" onkeyup="autoSave()" placeholder="Escriba aquí su respuesta de síntesis conceptual. Diferencie claramente el concepto de Equidad Interna (relación de valor relativo entre cargos del mismo peso dentro de la organización) frente a la Competitividad Externa (comparación con las ofertas del mercado laboral para retención de talento)..." class="w-full p-3 font-medium text-sm rounded-xl border-2 border-black bg-yellow-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700"></textarea>
+        </div>
+
+        <!-- Campo Opcional Adicional (Mapeado como Item 5 de respaldo) -->
+        <input type="hidden" id="item-5" value="Simulación Completada Exitosamente en Miniweb i3">
+      </div>
+    </section>
+
+    <!-- ================================================================================= -->
+    <!-- BOTÓN FINAL DE ENVÍO A GOOGLE SHEETS (WEBHOOK OBLIGATORIO) — no-print -->
+    <!-- ================================================================================= -->
+    <div class="no-print bg-purple-900 text-white p-6 rounded-2xl border-4 border-yellow-400 text-center space-y-4 shadow-2xl">
+      <h3 class="text-xl md:text-2xl font-black text-yellow-300 uppercase">
+        🚀 Envío Final de Evidencias al Docente
+      </h3>
+      <p class="text-xs md:text-sm text-purple-200 max-w-2xl mx-auto">
+        Asegúrese de haber completado todos los ítems analíticos. Al hacer clic abajo, sus respuestas serán transmitidas directamente a la plantilla docente en Google Sheets.
+      </p>
+
+      <div class="pt-2">
+        <button id="btn-enviar" onclick="sendToWebhook()" class="comic-btn bg-lime-400 hover:bg-lime-500 text-purple-950 font-black text-lg px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-3 mx-auto">
+          <i class="fa-solid fa-paper-plane text-xl"></i>
+          ENVIAR TRABAJO A GOOGLE SHEETS ▶
+        </button>
+      </div>
+
+      <!-- Estado del Envío -->
+      <div id="webhook-status" class="hidden p-4 rounded-xl text-sm font-bold max-w-lg mx-auto"></div>
+    </div>
+
+  </main>
+
+  <!-- ================================================================================= -->
+  <!-- SCRIPT LOGIC (LOCALSTORAGE, SLIDERS, WEBHOOK, JSON & PRINT PREVIEW) -->
+  <!-- ================================================================================= -->
+  <script>
+    // URL EXACTA DEL WEBHOOK OBLIGATORIO DE GOOGLE APPS SCRIPT
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbykP5mOpfvgjO-R3aMf2t8tzAg-nc5Tc2cpVmtpRh33C-ZwYUW9G9-CWr-bq7zVEv5s/exec";
+    const STORAGE_KEY = "i3_simulacion_act04_data";
+    const TIMER_KEY = "i3_simulacion_act04_timer";
+    const ACTIVIDAD_ID_CONST = "I3perfiles_ACT04";
+
+    // CORREGIDO: control de envío para bloquear el PDF hasta transmisión real
+    let datosTransmitidos = false;
+    let lastTransmittedHash = "";
+
+    // 0. TOAST NO BLOQUEANTE (reemplaza todos los alert)
+    function showToast(message, type = "info") {
+      const toast = document.getElementById('toast-banner');
+      if (!toast) return;
+      toast.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-blue-600', 'bg-yellow-400');
+      let textColor = "text-white";
+      if (type === "error") toast.classList.add('bg-red-600');
+      else if (type === "success") toast.classList.add('bg-green-600');
+      else if (type === "warning") { toast.classList.add('bg-yellow-400'); textColor = "text-purple-950"; }
+      else toast.classList.add('bg-blue-600');
+      toast.classList.add(textColor);
+      toast.innerHTML = message;
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.add('hidden'), 6000);
+    }
+
+    // 1. CRONÓMETRO DE CUENTA REGRESIVA — CORREGIDO: persistente ante recargas
+    let tiempoSegundos = 65 * 60;
+    let tiempoTerminado = false;
+    function iniciarCronometro() {
+      const display = document.getElementById('cronometro');
+      if (!display) return;
+
+      // Restaurar tiempo restante restando el tiempo transcurrido desde el último guardado
+      try {
+        const raw = localStorage.getItem(TIMER_KEY);
+        if (raw) {
+          const saved = JSON.parse(raw);
+          const elapsed = Math.floor((Date.now() - saved.ts) / 1000);
+          tiempoSegundos = Math.max(0, saved.remaining - elapsed);
+        }
+      } catch (e) { /* Storage no disponible: se usa el valor por defecto 65:00 */ }
+
+      setInterval(() => {
+        if (tiempoSegundos <= 0) {
+          if (!tiempoTerminado) {
+            tiempoTerminado = true;
+            showToast("⏰ ¡Tiempo agotado! La sesión de 65 minutos ha finalizado.", "warning");
+          }
+          return;
+        }
+        tiempoSegundos--;
+        const min = Math.floor(tiempoSegundos / 60);
+        const seg = tiempoSegundos % 60;
+        display.textContent = `${min.toString().padStart(2, '0')}:${seg.toString().padStart(2, '0')}`;
+
+        // Persistir cada 5 segundos para sobrevivir recargas
+        if (tiempoSegundos % 5 === 0) {
+          try { localStorage.setItem(TIMER_KEY, JSON.stringify({ remaining: tiempoSegundos, ts: Date.now() })); } catch (e) {}
+        }
+      }, 1000);
+    }
+
+    // 2. ECUALIZADOR FINANCIERO Y CONTROL NORMATIVO DE SST
+    function actualizarPresupuesto() {
+      const salarios = parseInt(document.getElementById('slide-salarios').value) || 0;
+      const reclutamiento = parseInt(document.getElementById('slide-reclutamiento').value) || 0;
+      const formacion = parseInt(document.getElementById('slide-formacion').value) || 0;
+      const sst = parseInt(document.getElementById('slide-sst').value) || 0;
+      const tecnologia = parseInt(document.getElementById('slide-tecnologia').value) || 0;
+      const tiempo = parseInt(document.getElementById('slide-tiempo').value) || 0;
+
+      // Actualizar Etiquetas
+      document.getElementById('val-salarios').textContent = `$${salarios}M`;
+      document.getElementById('val-reclutamiento').textContent = `$${reclutamiento}M`;
+      document.getElementById('val-formacion').textContent = `$${formacion}M`;
+      document.getElementById('val-sst').textContent = `$${sst}M`;
+      document.getElementById('val-tecnologia').textContent = `$${tecnologia}M`;
+      document.getElementById('val-tiempo').textContent = `$${tiempo}M`;
+
+      const total = salarios + reclutamiento + formacion + sst + tecnologia + tiempo;
+      const totalDisplay = document.getElementById('presupuesto-total-display');
+      totalDisplay.textContent = `$${total}M COP`;
+
+      // Control de Presupuesto Congelado ($1.200M)
+      if (total > 1200) {
+        totalDisplay.className = "text-2xl font-black text-red-600";
+      } else {
+        totalDisplay.className = "text-2xl font-black text-purple-900";
+      }
+
+      // Restricción Normativa Mínima de SST ($150M)
+      const alerta = document.getElementById('alerta-sst');
+      const alertaPresupuesto = document.getElementById('alerta-presupuesto');
+      const btnEnviar = document.getElementById('btn-enviar');
+
+      const infraccionSST = sst < 150;
+      const excesoPresupuesto = total > 1200;
+
+      // CORREGIDO: tanto la infracción de SST como el exceso presupuestal bloquean el envío
+      if (infraccionSST || excesoPresupuesto) {
+        btnEnviar.disabled = true;
+        btnEnviar.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        btnEnviar.disabled = false;
+        btnEnviar.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+
+      if (infraccionSST) alerta.classList.remove('hidden'); else alerta.classList.add('hidden');
+      if (excesoPresupuesto) alertaPresupuesto.classList.remove('hidden'); else alertaPresupuesto.classList.add('hidden');
+
+      autoSave();
+    }
+
+    // 3. CAPTURA DE DATOS ESTÁNDAR PARA WEBHOOK
+    function getFormData() {
+      return {
+        materia: document.getElementById('input-materia')?.value || "Estructurar Perfiles de cargo 1",
+        actividad_id: ACTIVIDAD_ID_CONST, // ID constante congelado (no depende del input editable)
+        grupo: document.getElementById('input-grupo')?.value || "",
+        participantes: document.getElementById('input-participantes')?.value || "",
+        item1: document.getElementById('item-1')?.value || "",
+        item2: document.getElementById('item-2')?.value || "",
+        item3: document.getElementById('item-3')?.value || "",
+        item4: document.getElementById('item-4')?.value || "",
+        item5: document.getElementById('item-5')?.value || "Simulación Completada Exitosamente",
+        estado: "Entregado"
+      };
+    }
+
+    // CORREGIDO: hash de integridad que cubre TODA la interacción (ítems, selects y sliders)
+    function computeHash() {
+      const f = getFormData();
+      const s = {
+        carlosNivel: document.getElementById('carlos-nivel')?.value,
+        carlosVia: document.getElementById('carlos-via')?.value,
+        andreaNivel: document.getElementById('andrea-nivel')?.value,
+        andreaVia: document.getElementById('andrea-via')?.value,
+        julianNivel: document.getElementById('julian-nivel')?.value,
+        julianVia: document.getElementById('julian-via')?.value,
+        item3Mateo: document.getElementById('item-3-mateo')?.value,
+        item4Sofia: document.getElementById('item-4-sofia')?.value,
+        sliders: {
+          salarios: document.getElementById('slide-salarios')?.value,
+          reclutamiento: document.getElementById('slide-reclutamiento')?.value,
+          formacion: document.getElementById('slide-formacion')?.value,
+          sst: document.getElementById('slide-sst')?.value,
+          tecnologia: document.getElementById('slide-tecnologia')?.value,
+          tiempo: document.getElementById('slide-tiempo')?.value
+        }
+      };
+      return JSON.stringify({ f, s });
+    }
+
+    // CORREGIDO: candado del PDF (bloqueado hasta transmisión; se re-bloquea si se edita después)
+    function lockPreviewButton(reason) {
+      const btn = document.getElementById('btn-preview');
+      if (btn) {
+        btn.disabled = true;
+        btn.className = "comic-btn bg-slate-400 text-slate-700 font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-not-allowed opacity-60";
+        btn.innerHTML = '<i class="fa-solid fa-lock"></i> Vista Previa PDF / Imprimir';
+        btn.title = reason || "⚠️ Debes enviar el trabajo a Google Sheets para habilitar el reporte PDF.";
+      }
+    }
+
+    function unlockPreviewButton() {
+      const btn = document.getElementById('btn-preview');
+      if (btn) {
+        btn.disabled = false;
+        btn.removeAttribute('title');
+        btn.className = "comic-btn bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black px-4 py-2 rounded-xl flex items-center gap-1.5";
+        btn.innerHTML = '<i class="fa-solid fa-print"></i> Vista Previa PDF / Imprimir';
+      }
+    }
+
+    // 4. AUTOGUARDADO REALTIME (LOCALSTORAGE)
+    function autoSave() {
+      // REGLA DE SEGURIDAD: si el estudiante edita tras enviar, el candado del PDF se re-activa
+      if (datosTransmitidos && computeHash() !== lastTransmittedHash) {
+        datosTransmitidos = false;
+        lockPreviewButton("⚠️ Detectamos cambios tras el envío. Vuelve a hacer clic en 'ENVIAR TRABAJO' para actualizar la entrega y habilitar el PDF.");
+        showToast("⚠️ Realizaste cambios después de enviar. Debes volver a transmitir el trabajo.", "warning");
+      }
+
+      const data = {
+        formData: getFormData(),
+        carlosNivel: document.getElementById('carlos-nivel')?.value,
+        carlosVia: document.getElementById('carlos-via')?.value,
+        andreaNivel: document.getElementById('andrea-nivel')?.value,
+        andreaVia: document.getElementById('andrea-via')?.value,
+        julianNivel: document.getElementById('julian-nivel')?.value,
+        julianVia: document.getElementById('julian-via')?.value,
+        item3Mateo: document.getElementById('item-3-mateo')?.value,
+        item4Sofia: document.getElementById('item-4-sofia')?.value,
+        sliders: {
+          salarios: document.getElementById('slide-salarios')?.value,
+          reclutamiento: document.getElementById('slide-reclutamiento')?.value,
+          formacion: document.getElementById('slide-formacion')?.value,
+          sst: document.getElementById('slide-sst')?.value,
+          tecnologia: document.getElementById('slide-tecnologia')?.value,
+          tiempo: document.getElementById('slide-tiempo')?.value
+        },
+        transmitted: datosTransmitidos ? 'true' : 'false',
+        hash: lastTransmittedHash
+      };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* Storage restringido */ }
+
+      const saveIndicator = document.getElementById('save-indicator');
+      if (saveIndicator) {
+        saveIndicator.textContent = "Guardado " + new Date().toLocaleTimeString();
+      }
+    }
+
+    // CORREGIDO: asignar selects solo si el valor existe entre las opciones
+    function setSelectValue(id, value) {
+      const sel = document.getElementById(id);
+      if (!sel || !value) return;
+      if ([...sel.options].some(o => o.value === value)) sel.value = value;
+    }
+
+    function loadSavedData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.formData) {
+          if (parsed.formData.materia) document.getElementById('input-materia').value = parsed.formData.materia;
+          if (parsed.formData.grupo) document.getElementById('input-grupo').value = parsed.formData.grupo;
+          if (parsed.formData.participantes) document.getElementById('input-participantes').value = parsed.formData.participantes;
+          if (parsed.formData.item1) document.getElementById('item-1').value = parsed.formData.item1;
+          if (parsed.formData.item2) document.getElementById('item-2').value = parsed.formData.item2;
+          if (parsed.formData.item3) document.getElementById('item-3').value = parsed.formData.item3;
+          if (parsed.formData.item4) document.getElementById('item-4').value = parsed.formData.item4;
+        }
+        setSelectValue('carlos-nivel', parsed.carlosNivel);
+        setSelectValue('carlos-via', parsed.carlosVia);
+        setSelectValue('andrea-nivel', parsed.andreaNivel);
+        setSelectValue('andrea-via', parsed.andreaVia);
+        setSelectValue('julian-nivel', parsed.julianNivel);
+        setSelectValue('julian-via', parsed.julianVia);
+        setSelectValue('item-3-mateo', parsed.item3Mateo);
+        setSelectValue('item-4-sofia', parsed.item4Sofia);
+
+        if (parsed.sliders) {
+          if (parsed.sliders.salarios) document.getElementById('slide-salarios').value = parsed.sliders.salarios;
+          if (parsed.sliders.reclutamiento) document.getElementById('slide-reclutamiento').value = parsed.sliders.reclutamiento;
+          if (parsed.sliders.formacion) document.getElementById('slide-formacion').value = parsed.sliders.formacion;
+          if (parsed.sliders.sst) document.getElementById('slide-sst').value = parsed.sliders.sst;
+          if (parsed.sliders.tecnologia) document.getElementById('slide-tecnologia').value = parsed.sliders.tecnologia;
+          if (parsed.sliders.tiempo) document.getElementById('slide-tiempo').value = parsed.sliders.tiempo;
+        }
+
+        // CORREGIDO: restaurar el candado del PDF solo si el hash de lo transmitido coincide exactamente
+        lastTransmittedHash = parsed.hash || "";
+        if (parsed.transmitted === 'true' && computeHash() === lastTransmittedHash) {
+          datosTransmitidos = true;
+          unlockPreviewButton();
+        } else {
+          datosTransmitidos = false;
+          lockPreviewButton();
+        }
+      } catch (e) {
+        console.error("Error al cargar LocalStorage", e);
+      }
+    }
+
+    // 5. RESPALDO Y CARGA JSON
+    function downloadBackup() {
+      const data = getFormData();
+      // CORREGIDO: el respaldo no declara "Entregado" si no se ha transmitido
+      const backup = { ...data, estado: datosTransmitidos ? "Entregado" : "Borrador" };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = `Respaldo_I3perfiles_ACT04_${backup.grupo || 'Grupo'}.json`;
+      a.click();
+      // CORREGIDO: revocación diferida (evita cancelar la descarga en Safari/WebKit)
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const json = JSON.parse(e.target.result);
+          if (typeof json !== 'object' || Array.isArray(json) || !json) throw new Error("Formato inválido");
+
+          // CORREGIDO: rechazar respaldos de otra actividad (los campos son homónimos entre actividades)
+          if (json.actividad_id && json.actividad_id !== ACTIVIDAD_ID_CONST) {
+            showToast("❌ El archivo pertenece a otra actividad (" + escapeHTML(String(json.actividad_id)) + "). No se cargó ningún dato.", "error");
+            return;
+          }
+
+          if (json.materia) document.getElementById('input-materia').value = json.materia;
+          if (json.grupo) document.getElementById('input-grupo').value = json.grupo;
+          if (json.participantes) document.getElementById('input-participantes').value = json.participantes;
+          if (json.item1) document.getElementById('item-1').value = json.item1;
+          if (json.item2) document.getElementById('item-2').value = json.item2;
+          if (json.item3) document.getElementById('item-3').value = json.item3;
+          if (json.item4) document.getElementById('item-4').value = json.item4;
+          autoSave();
+          showToast("📂 Respaldo JSON cargado con éxito. Recuerda transmitir el trabajo para habilitar el PDF.", "success");
+        } catch (err) {
+          showToast("❌ El archivo no corresponde a una copia de respaldo JSON válida de esta actividad.", "error");
+        } finally {
+          event.target.value = ''; // Permitir recargar el mismo archivo
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // 6. TRANSMISIÓN AL WEBHOOK GOOGLE SHEETS
+    async function sendToWebhook() {
+      const statusDiv = document.getElementById('webhook-status');
+      const btn = document.getElementById('btn-enviar');
+      const payload = getFormData();
+
+      // CORREGIDO: además de grupo/participantes, se validan los ítems y decisiones de los 3 retos
+      const faltantes = [];
+      if (!payload.grupo.trim()) faltantes.push("Firma Consultora / Grupo");
+      if (!payload.participantes.trim()) faltantes.push("Integrantes de la Mesa");
+      if (!payload.item1.trim()) faltantes.push("Ítem 1 (Frase Analítica MNC)");
+      if (!payload.item2.trim()) faltantes.push("Ítem 2 (Defensa ante el CFO)");
+      if (!payload.item3.trim()) faltantes.push("Ítem 3 (Dictamen Workforce Planning)");
+      if (!payload.item4.trim()) faltantes.push("Ítem 4/5 (Síntesis de Cierre)");
+      if (!document.getElementById('carlos-nivel').value) faltantes.push("Nivel MNC de Don Carlos");
+      if (!document.getElementById('carlos-via').value) faltantes.push("Vía de Don Carlos");
+      if (!document.getElementById('andrea-nivel').value) faltantes.push("Nivel MNC de Andrea");
+      if (!document.getElementById('andrea-via').value) faltantes.push("Vía de Andrea");
+      if (!document.getElementById('julian-nivel').value) faltantes.push("Nivel MNC de Julián");
+      if (!document.getElementById('julian-via').value) faltantes.push("Vía de Julián");
+      if (!document.getElementById('item-3-mateo').value) faltantes.push("Estrategia para Mateo");
+      if (!document.getElementById('item-4-sofia').value) faltantes.push("Estrategia para Sofía");
+      if (faltantes.length > 0) {
+        showToast("⚠️ Complete antes de enviar:<br>• " + escapeHTML(faltantes.join("<br>• ")), "warning");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "Transmitiendo a Google Sheets...";
+      statusDiv.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+      statusDiv.classList.add('bg-blue-600', 'text-white');
+      statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando con la hoja de evaluación del docente...';
+
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          // CORREGIDO: 'application/json' no es un header permitido con no-cors;
+          // el navegador lo degrada y el Apps Script puede fallar al parsear
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+
+        statusDiv.classList.remove('bg-blue-600');
+        statusDiv.classList.add('bg-green-600', 'text-white');
+        statusDiv.innerHTML = '<i class="fa-solid fa-circle-check"></i> ¡Trabajo enviado con éxito a Google Sheets! Proceda a exportar su reporte PDF.';
+
+        // CORREGIDO: solo tras el envío real se habilita el PDF (Paso 3 → Paso 4)
+        datosTransmitidos = true;
+        lastTransmittedHash = computeHash();
+        unlockPreviewButton();
+        autoSave();
+
+      } catch (error) {
+        statusDiv.classList.remove('bg-blue-600');
+        statusDiv.classList.add('bg-red-600', 'text-white');
+        statusDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error al conectar con el servidor. Guarde su JSON de respaldo.';
+        showToast("❌ Error de red: el trabajo NO se transmitió. Use 'Descargar JSON' como respaldo.", "error");
+        // REGLA DE HONESTIDAD: si falló la conexión, el PDF no se habilita
+        datosTransmitidos = false;
+        lockPreviewButton();
+      } finally {
+        // CORREGIDO: no re-habilitar el botón si hay bloqueo normativo (SST o exceso presupuestal)
+        const sst = parseInt(document.getElementById('slide-sst').value) || 0;
+        const sliders = ['slide-salarios','slide-reclutamiento','slide-formacion','slide-sst','slide-tecnologia','slide-tiempo'];
+        const total = sliders.reduce((acc, id) => acc + (parseInt(document.getElementById(id).value) || 0), 0);
+        btn.disabled = (sst < 150 || total > 1200);
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xl"></i> ENVIAR TRABAJO A GOOGLE SHEETS ▶';
+      }
+    }
+
+    // 7. VISTA PREVIA LIMPIA PARA IMPRESIÓN PDF (openPreview)
+    function openPreview() {
+      // CORREGIDO: candado dinámico — el PDF solo se exporta tras el envío real y sin ediciones posteriores
+      if (!datosTransmitidos || computeHash() !== lastTransmittedHash) {
+        showToast("⛔ Acción Bloqueada: Debes hacer clic en 'ENVIAR TRABAJO A GOOGLE SHEETS' (y no editar después) para habilitar el reporte PDF.", "error");
+        return;
+      }
+
+      const data = getFormData();
+      const previewWindow = window.open('', '_blank');
+
+      // CORREGIDO: manejar pop-ups bloqueados (antes: crash en previewWindow.document)
+      if (!previewWindow) {
+        showToast("⚠️ Ventana emergente bloqueada por el navegador. Permite los pop-ups para ver el PDF.", "warning");
+        return;
+      }
+
+      const content = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <!-- CORREGIDO: la ventana generada necesita su propio viewport -->
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Memorando de Entrega - Instituto i3 (${escapeHTML(data.actividad_id)})</title>
+          <style>
+            @page { size: A4; margin: 15mm; }
+            * { box-sizing: border-box; }
+            body {
+              font-family: Arial, sans-serif;
+              padding: 40px;
+              color: #1e293b;
+              line-height: 1.6;
+              margin: 0;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
+            h2 { color: #1e3a8a; margin-top: 25px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; page-break-inside: avoid; }
+            .meta-box {
+              background-color: #f8fafc;
+              border: 1px solid #cbd5e1;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 20px;
+              word-break: break-word;
+              overflow-wrap: break-word;
+            }
+            .response-box {
+              background-color: #f1f5f9;
+              border-left: 4px solid #1e40af;
+              padding: 15px;
+              margin: 10px 0;
+              border-radius: 4px;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              page-break-inside: auto;
+            }
+            .btn-print { background-color: #1e40af; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+            @media print { .no-print { display: none !important; } body { width: 100%; margin: 0; padding: 0; } }
+            @media (max-width: 600px) { body { padding: 15px; } }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="margin-bottom: 20px;">
+            <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+          </div>
+
+          <h1>Instituto i3 — Reporte Final de Evaluación</h1>
+          
+          <div class="meta-box">
+            <p><strong>Materia:</strong> ${escapeHTML(data.materia)}</p>
+            <p><strong>ID de Actividad:</strong> ${escapeHTML(data.actividad_id)}</p>
+            <p><strong>Firma Consultora:</strong> ${escapeHTML(data.grupo)}</p>
+            <p><strong>Integrantes:</strong> ${escapeHTML(data.participantes)}</p>
+            <p><strong>Estado:</strong> ${escapeHTML(data.estado)}</p>
+            <p><strong>Fecha de Exportación:</strong> ${new Date().toLocaleString('es-CO')}</p>
+          </div>
+
+          <h2>1. Dictamen de Cualificación (MNC y Ruta RAP)</h2>
+          <div class="response-box">${escapeHTML(data.item1)}</div>
+
+          <h2>2. Defensa Presupuestal ante el CFO</h2>
+          <div class="response-box">${escapeHTML(data.item2)}</div>
+
+          <h2>3. Dictamen de Workforce Planning (9-Box Grid & Build vs Buy)</h2>
+          <div class="response-box">${escapeHTML(data.item3)}</div>
+
+          <h2>4. Síntesis Individual (Exit Ticket)</h2>
+          <div class="response-box">${escapeHTML(data.item4)}</div>
+
+          <p style="margin-top: 40px; font-size: 11px; text-align: center; color: #64748b;">
+            Documento generado automáticamente por la Plataforma Interactiva de Evaluación de Instituto i3.
+          </p>
+        </body>
+        </html>
+      `;
+
+      previewWindow.document.write(content);
+      previewWindow.document.close();
+    }
+
+    // CORREGIDO: escape de HTML en TODOS los puntos de interpolación (pantalla y PDF)
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // INICIALIZACIÓN
+    window.onload = function() {
+      iniciarCronometro();
+      loadSavedData();
+      actualizarPresupuesto();
+    };
+  </script>
+</body>
+</html>
